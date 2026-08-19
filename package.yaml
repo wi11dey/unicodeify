@@ -1,0 +1,26 @@
+name: unicodeify
+version: 1.0.0
+build-type: Simple
+dependencies:
+  - base
+  - Cabal
+  - haskell-src-exts
+default-extensions:
+  - BlockArguments
+  - OverloadedStrings
+  - RecordWildCards
+  - NamedFieldPuns
+  - UnicodeSyntax
+  - ViewPatterns
+ghc-options:
+  - -Wall
+library:
+  source-dirs: src
+  dependencies:
+    - text
+executable:
+  source-dirs: app
+  main: Main.hs
+  dependencies:
+    - unicodeify
+    - optparse-applicative
