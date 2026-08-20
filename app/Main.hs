@@ -47,16 +47,17 @@ main = do
     isFile      ← doesFileExist      path
     isDirectory ← doesDirectoryExist path
     if ".cabal" `isSuffixOf` path
-    then if not isFile then do
+    then if not isFile
+    then do
       hPutStrLn stderr $ path ++ " is not a Cabal file as was expected"
       return []
     else filesFromCabal path
-    else if isDirectory then do
-      findPackageDesc path >>= flip either filesFromCabal \exception → do
-        hPutStrLn stderr $ "Couldn't find Cabal file in project " ++ path ++ ": " ++ exceptionMessage exception
-        return []
-    else if isFile then do
-      return [(ghcDefault, path)]
+    else if isDirectory
+    then findPackageDesc path >>= flip either filesFromCabal \exception → do
+      hPutStrLn stderr $ "Couldn't find Cabal file in project " ++ path ++ ": " ++ exceptionMessage exception
+      return []
+    else if isFile
+    then return [(ghcDefault, path)]
     else do
       hPutStrLn stderr $ path ++ " does not exist"
       return []
