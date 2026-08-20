@@ -54,6 +54,7 @@ executable unicodeify
       Cabal
     , base
     , directory
+    , filepath
     , haskell-src-exts
     , optparse-applicative
     , text

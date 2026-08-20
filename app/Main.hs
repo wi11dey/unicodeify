@@ -1,16 +1,17 @@
 import Control.Monad
 import Data.List (isSuffixOf)
 import Data.List.NonEmpty hiding (reverse)
+import Distribution.PackageDescription.Configuration
 import Distribution.Simple.Errors
 import Distribution.Simple.PackageDescription
 import Distribution.Simple.PreProcess
 import Distribution.Simple.SrcDist
 import Distribution.Simple.Utils hiding (info)
-import Distribution.Types.GenericPackageDescription
 import Distribution.Verbosity (silent)
 import Language.Haskell.Exts.Extension
 import Options.Applicative
 import System.Directory
+import System.FilePath
 import System.IO
 
 import Language.Haskell.Tokens
@@ -33,9 +34,8 @@ options = Options <$>
 
 filesFromCabal ∷ FilePath → IO [([Extension], FilePath)]
 filesFromCabal cabalFile = do
-  package ← packageDescription <$> readGenericPackageDescription silent cabalFile
-  packageFiles ← listPackageSources silent "." package knownSuffixHandlers
-  putStrLn $ show packageFiles
+  package ← flattenPackageDescription <$> readGenericPackageDescription silent cabalFile
+  packageFiles ← listPackageSources silent (takeDirectory cabalFile) package knownSuffixHandlers
   return $ (enabledPackageExtensions package,) <$> packageFiles
 
 main ∷ IO ()
