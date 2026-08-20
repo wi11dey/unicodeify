@@ -1,6 +1,7 @@
 import Control.Monad
 import Data.List (isSuffixOf, nub)
 import Data.List.NonEmpty hiding (reverse, nub)
+import Data.Maybe
 import Distribution.PackageDescription.Configuration
 import Distribution.Simple.Errors
 import Distribution.Simple.PackageDescription
@@ -29,8 +30,9 @@ description = fullDesc <> progDesc "Enforce UnicodeSyntax usage in Haskell sourc
 options ∷ Parser Options
 options = Options <$>
   switch (long "dry-run" <> help "Fail with stderr if there is non-Unicode syntax") <*>
-  (maybe (singleton ".") id . nonEmpty
-    <$> many (argument str (metavar "PATHS..." <> help "Files or directories of Cabal projects to process")))
+  (fromMaybe (singleton ".") .
+   nonEmpty <$>
+   many (argument str (metavar "PATHS..." <> help "Files or directories of Cabal projects to process")))
 
 filesFromCabal ∷ FilePath → IO [([Extension], FilePath)]
 filesFromCabal cabalFile = do
