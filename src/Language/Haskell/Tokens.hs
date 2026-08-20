@@ -58,7 +58,7 @@ warnOnNonUnicode throw (SrcSpan {..}, replacement) = do
   let startLoc = SrcLoc srcSpanFilename srcSpanStartLine srcSpanStartColumn
       endLoc   = SrcLoc srcSpanFilename srcSpanEndLine   srcSpanEndColumn
       withLocs = locateChars srcSpanFilename source
-      srcSpan = map snd $ filter (\(loc, _) → startLoc <= loc && loc <= endLoc) withLocs
+      srcSpan = map snd $ filter (\(loc, _) → startLoc <= loc && loc < endLoc) withLocs
   if srcSpan == replacement
   then return ()
   else (if throw then fail else hPutStrLn stderr) $ printf "Non-UnicodeSyntax at %s:%d,%d: %s"
