@@ -52,13 +52,13 @@ locateChars filename text = do
   (columnNumber, char)     ← zip [1..] $ Text.unpack lineText ++ "\n"
   return (SrcLoc filename lineNumber columnNumber, char)
 
-warnOnNonUnicode :: Bool -> (SrcSpan, String) -> IO ()
+warnOnNonUnicode ∷ Bool → (SrcSpan, String) → IO ()
 warnOnNonUnicode throw (SrcSpan {..}, replacement) = do
   source ← Text.readFile srcSpanFilename
   let startLoc = SrcLoc srcSpanFilename srcSpanStartLine srcSpanStartColumn
       endLoc   = SrcLoc srcSpanFilename srcSpanEndLine   srcSpanEndColumn
       withLocs = locateChars srcSpanFilename source
-      srcSpan = map snd $ filter (\(loc, _) -> startLoc <= loc && loc <= endLoc) withLocs
+      srcSpan = map snd $ filter (\(loc, _) → startLoc <= loc && loc <= endLoc) withLocs
   if srcSpan == replacement
   then return ()
   else (if throw then fail else hPutStrLn stderr) $ printf "Non-UnicodeSyntax at %s:%d,%d: %s"
