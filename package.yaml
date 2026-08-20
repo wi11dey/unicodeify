@@ -5,6 +5,7 @@ dependencies:
   - base
   - Cabal
   - haskell-src-exts
+  - text
 default-extensions:
   - BlockArguments
   - OverloadedStrings
@@ -16,11 +17,13 @@ ghc-options:
   - -Wall
 library:
   source-dirs: src
-  dependencies:
-    - text
+  exposed-modules:
+    - Language.Haskell.Tokens
 executable:
-  source-dirs: app
+  source-dirs:
+    - app
+    - src
   main: Main.hs
   dependencies:
-    - unicodeify
     - optparse-applicative
+    - directory

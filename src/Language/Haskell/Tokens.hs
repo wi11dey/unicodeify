@@ -78,5 +78,5 @@ replaceAllInPackage package substitution = do
         Cabal.EnableExtension extension ← defaultExtensions ++ otherExtensions
         return $ classifyExtension $ show extension
   packageFiles ← listPackageSources normal "." package knownSuffixHandlers
-  (concat → replacements) ← forM packageFiles $ findReplaceableSpans substitution extensions
+  replacements ← concat <$> forM packageFiles (findReplaceableSpans substitution extensions)
   sequence_ $ reverse $ map replaceInPlace replacements
