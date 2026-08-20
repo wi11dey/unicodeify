@@ -9,7 +9,6 @@ dependencies:
 default-extensions:
   - BlockArguments
   - NamedFieldPuns
-  - OverloadedStrings
   - RecordWildCards
   - TupleSections
   - UnicodeSyntax

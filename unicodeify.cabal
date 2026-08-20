@@ -19,7 +19,6 @@ library
   default-extensions:
       BlockArguments
       NamedFieldPuns
-      OverloadedStrings
       RecordWildCards
       TupleSections
       UnicodeSyntax
@@ -44,7 +43,6 @@ executable unicodeify
   default-extensions:
       BlockArguments
       NamedFieldPuns
-      OverloadedStrings
       RecordWildCards
       TupleSections
       UnicodeSyntax

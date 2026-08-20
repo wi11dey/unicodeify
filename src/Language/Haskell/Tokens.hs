@@ -5,6 +5,7 @@ module Language.Haskell.Tokens where
 import Control.Monad
 import Data.List
 import Data.Maybe
+import Data.Text (Text)
 import Distribution.Simple.PreProcess
 import Distribution.Simple.PreProcess.Unlit
 import Distribution.Simple.SrcDist
@@ -15,13 +16,14 @@ import Language.Haskell.Exts.Extension
 import Language.Haskell.Exts.Lexer
 import Language.Haskell.Exts.Parser
 import Language.Haskell.Exts.SrcLoc
-import Data.Text (Text)
+import System.IO
+import Text.Printf
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 
 import Utils
 
-unicodeSyntax ∷ Token → Maybe Text
+unicodeSyntax ∷ Token → Maybe String
 unicodeSyntax KW_Forall   = Just "∀"
 unicodeSyntax DoubleColon = Just "∷"
 unicodeSyntax RightArrow  = Just "→"
@@ -44,32 +46,38 @@ tokenize extensions parseFilename
         lexTokenStreamWithMode defaultParseMode { parseFilename, extensions } source
   | otherwise = return []
 
-indexChars ∷ FilePath → Text → [(SrcLoc, Char)]
-indexChars filename text = do
+locateChars ∷ FilePath → Text → [(SrcLoc, Char)]
+locateChars filename text = do
   (lineNumber,   lineText) ← zip [1..] $ Text.lines text
-  (columnNumber, char)     ← zip [1..] $ Text.unpack lineText
+  (columnNumber, char)     ← zip [1..] $ Text.unpack lineText ++ "\n"
   return (SrcLoc filename lineNumber columnNumber, char)
 
-replaceInPlace ∷ (SrcSpan, Text) → IO ()
-replaceInPlace (SrcSpan { srcSpanFilename = filename
-                 , srcSpanStartLine   = (subtract 1 → startLn)
-                 , srcSpanStartColumn = (subtract 1 → startCol)
-                 , srcSpanEndLine     = (subtract 1 → endLn)
-                 , srcSpanEndColumn   = (subtract 1 → endCol)
-                 },
-          replacement) = do
-  source ← Text.readFile filename
-  let (prevLines, splitAt (endLn - startLn + 1) → (spanLines, nextLines)) =
-        splitAt startLn $ Text.lines source
-  Text.writeFile filename $
-    Text.unlines $
-    prevLines ++
-      [ Text.take startCol (head spanLines) <>
-        replacement <>
-        Text.drop endCol (last spanLines)] ++
-      nextLines
+warnOnNonUnicode :: Bool -> (SrcSpan, String) -> IO ()
+warnOnNonUnicode throw (SrcSpan {..}, replacement) = do
+  source ← Text.readFile srcSpanFilename
+  let startLoc = SrcLoc srcSpanFilename srcSpanStartLine srcSpanStartColumn
+      endLoc   = SrcLoc srcSpanFilename srcSpanEndLine   srcSpanEndColumn
+      withLocs = locateChars srcSpanFilename source
+      srcSpan = map snd $ filter (\(loc, _) -> startLoc <= loc && loc <= endLoc) withLocs
+  if srcSpan == replacement
+  then return ()
+  else (if throw then fail else hPutStrLn stderr) $ printf "Non-UnicodeSyntax at %s:%d,%d: %s"
+    srcSpanFilename
+    srcSpanStartLine
+    srcSpanStartColumn
+    srcSpan
 
-findReplaceableSpans ∷ (Token → Maybe Text) → [Extension] → FilePath → IO [(SrcSpan, Text)]
+replaceInPlace ∷ (SrcSpan, String) → IO ()
+replaceInPlace (SrcSpan {..}, replacement) = do
+  source ← Text.readFile srcSpanFilename
+  let startLoc = SrcLoc srcSpanFilename srcSpanStartLine srcSpanStartColumn
+      endLoc   = SrcLoc srcSpanFilename srcSpanEndLine   srcSpanEndColumn
+      withLocs = locateChars srcSpanFilename source
+  Text.writeFile srcSpanFilename $
+    Text.pack $
+    map snd (takeWhile ((< startLoc) . fst) withLocs) ++ replacement ++ map snd (dropWhile ((< endLoc) . fst) withLocs)
+
+findReplaceableSpans ∷ (Token → Maybe String) → [Extension] → FilePath → IO [(SrcSpan, String)]
 findReplaceableSpans substitution extensions file = do
   tokens ← tokenize extensions file
   return do
@@ -77,7 +85,7 @@ findReplaceableSpans substitution extensions file = do
     replacement ← maybeToList $ substitution unLoc
     return (loc, replacement)
 
-replaceAllInPackage ∷ PackageDescription → (Token → Maybe Text) → IO ()
+replaceAllInPackage ∷ PackageDescription → (Token → Maybe String) → IO ()
 replaceAllInPackage package substitution = do
   packageFiles ← listPackageSources normal "." package knownSuffixHandlers
   replacements ← concat <$> (
