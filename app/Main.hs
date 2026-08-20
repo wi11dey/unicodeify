@@ -58,7 +58,5 @@ main = do
     else do
       hPutStrLn stderr $ path ++ " does not exist"
       return []
-  replacements ← forM files $
-    uncurry $
-    findReplaceableSpans unicodeSyntax
+  replacements ← forM files $ uncurry $ findReplaceableSpans unicodeSyntax
   sequence_ $ reverse $ replaceInPlace <$> concat replacements
