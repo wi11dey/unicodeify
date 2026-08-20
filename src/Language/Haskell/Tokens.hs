@@ -29,7 +29,7 @@ unicodeSyntax LeftArrow   = Just "←"
 unicodeSyntax DoubleArrow = Just "⇒"
 unicodeSyntax _           = Nothing
 
-tokenize :: [Extension] -> FilePath -> IO [Loc Token]
+tokenize ∷ [Extension] → FilePath → IO [Loc Token]
 tokenize extensions parseFilename
   | ".lhs" `isSuffixOf` parseFilename = do
       source ← readFile parseFilename
@@ -63,7 +63,7 @@ replaceInPlace (SrcSpan { srcSpanFilename = filename
         Text.drop endCol (last spanLines)] ++
       nextLines
 
-findReplaceableSpans :: (Token -> Maybe Text) -> [Extension] -> FilePath -> IO [(SrcSpan, Text)]
+findReplaceableSpans ∷ (Token → Maybe Text) → [Extension] → FilePath → IO [(SrcSpan, Text)]
 findReplaceableSpans substitution extensions file = do
   tokens ← tokenize extensions file
   return do
@@ -71,7 +71,7 @@ findReplaceableSpans substitution extensions file = do
     replacement ← maybeToList $ substitution unLoc
     return (loc, replacement)
 
-replaceAllInPackage ∷ PackageDescription -> (Token -> Maybe Text) → IO ()
+replaceAllInPackage ∷ PackageDescription → (Token → Maybe Text) → IO ()
 replaceAllInPackage package substitution = do
   packageFiles ← listPackageSources normal "." package knownSuffixHandlers
   replacements ← concat <$> (
