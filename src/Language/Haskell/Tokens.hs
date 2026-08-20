@@ -9,10 +9,8 @@ import Distribution.Simple.PreProcess
 import Distribution.Simple.PreProcess.Unlit
 import Distribution.Simple.SrcDist
 import Distribution.Simple.Utils
-import Distribution.Types.BuildInfo
 import Distribution.Types.PackageDescription
-import Distribution.Verbosity
-import Language.Haskell.Extension as Cabal hiding (classifyExtension, Extension)
+import Distribution.Verbosity (normal)
 import Language.Haskell.Exts.Extension
 import Language.Haskell.Exts.Lexer
 import Language.Haskell.Exts.Parser
@@ -20,6 +18,8 @@ import Language.Haskell.Exts.SrcLoc
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
+
+import Utils
 
 unicodeSyntax ∷ Token → Maybe Text
 unicodeSyntax KW_Forall   = Just "∀"
@@ -73,10 +73,9 @@ findReplaceableSpans substitution extensions file = do
 
 replaceAllInPackage ∷ PackageDescription -> (Token -> Maybe Text) → IO ()
 replaceAllInPackage package substitution = do
-  let extensions = do
-        BuildInfo {..} ← allBuildInfo package
-        Cabal.EnableExtension extension ← defaultExtensions ++ otherExtensions
-        return $ classifyExtension $ show extension
   packageFiles ← listPackageSources normal "." package knownSuffixHandlers
-  replacements ← concat <$> forM packageFiles (findReplaceableSpans substitution extensions)
+  replacements ← concat <$> (
+    forM packageFiles $
+    findReplaceableSpans substitution $
+    enabledPackageExtensions package)
   sequence_ $ reverse $ map replaceInPlace replacements

@@ -18,9 +18,10 @@ library
       src
   default-extensions:
       BlockArguments
+      NamedFieldPuns
       OverloadedStrings
       RecordWildCards
-      NamedFieldPuns
+      TupleSections
       UnicodeSyntax
       ViewPatterns
   ghc-options: -Wall
@@ -42,9 +43,10 @@ executable unicodeify
       src
   default-extensions:
       BlockArguments
+      NamedFieldPuns
       OverloadedStrings
       RecordWildCards
-      NamedFieldPuns
+      TupleSections
       UnicodeSyntax
       ViewPatterns
   ghc-options: -Wall
