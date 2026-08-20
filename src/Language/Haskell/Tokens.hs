@@ -63,17 +63,20 @@ replaceInPlace (SrcSpan { srcSpanFilename = filename
         Text.drop endCol (last spanLines)] ++
       nextLines
 
-replaceAll ∷ PackageDescription -> (Token -> Maybe Text) → IO ()
-replaceAll package substitution = do
+findReplaceableSpans :: (Token -> Maybe Text) -> [Extension] -> FilePath -> IO [(SrcSpan, Text)]
+findReplaceableSpans substitution extensions file = do
+  tokens ← tokenize extensions file
+  return do
+    Loc {..} ← tokens
+    replacement ← maybeToList $ substitution unLoc
+    return (loc, replacement)
+
+replaceAllInPackage ∷ PackageDescription -> (Token -> Maybe Text) → IO ()
+replaceAllInPackage package substitution = do
   let extensions = do
         BuildInfo {..} ← allBuildInfo package
         Cabal.EnableExtension extension ← defaultExtensions ++ otherExtensions
         return $ classifyExtension $ show extension
   packageFiles ← listPackageSources normal "." package knownSuffixHandlers
-  (concat → replacements) ← forM packageFiles \file → do
-    tokens ← tokenize extensions file
-    return do
-      Loc {..} ← tokens
-      replacement ← maybeToList $ substitution unLoc
-      return (loc, replacement)
+  (concat → replacements) ← forM packageFiles $ findReplaceableSpans substitution extensions
   sequence_ $ reverse $ map replaceInPlace replacements
