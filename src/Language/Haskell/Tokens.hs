@@ -44,10 +44,10 @@ tokenize extensions parseFilename
         lexTokenStreamWithMode defaultParseMode { parseFilename, extensions } source
   | otherwise = return []
 
-indexChars :: FilePath -> Text -> [(SrcLoc, Char)]
+indexChars ∷ FilePath → Text → [(SrcLoc, Char)]
 indexChars filename text = do
-  (lineNumber,   lineText) <- zip [1..] $ Text.lines text
-  (columnNumber, char)     <- zip [1..] $ Text.unpack lineText
+  (lineNumber,   lineText) ← zip [1..] $ Text.lines text
+  (columnNumber, char)     ← zip [1..] $ Text.unpack lineText
   return (SrcLoc filename lineNumber columnNumber, char)
 
 replaceInPlace ∷ (SrcSpan, Text) → IO ()

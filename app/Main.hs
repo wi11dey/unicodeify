@@ -1,6 +1,6 @@
 import Control.Monad
-import Data.List (isSuffixOf)
-import Data.List.NonEmpty hiding (reverse)
+import Data.List (isSuffixOf, nub)
+import Data.List.NonEmpty hiding (reverse, nub)
 import Distribution.PackageDescription.Configuration
 import Distribution.Simple.Errors
 import Distribution.Simple.PackageDescription
@@ -41,7 +41,7 @@ filesFromCabal cabalFile = do
 main ∷ IO ()
 main = do
   Options {..} ← execParser $ info (options <**> helper) description
-  files ← concat <$> forM paths \path → do
+  files ← nub <$> concat <$> forM paths \path → do
     isFile      ← doesFileExist      path
     isDirectory ← doesDirectoryExist path
     if ".cabal" `isSuffixOf` path
